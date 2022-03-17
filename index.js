@@ -12,13 +12,19 @@ searchForm.addEventListener('submit', e => {
   const searchLimit = document.getElementById('limit').value;
   
   // check input 
-  if(searchTerm === '') {
+  if(searchTerm === '' && query === 'q=') {
+    controller.abort();
+    console.log('yes');
     // show message
     showMessage('Please add a search term', 'alert-danger');
   }
-
   // clear input
   searchInput.value = '';
+
+  // abort controller
+  const controller = new AbortController();
+  // signal to pass to fetch
+  const signal = controller.signal;
 
   // News API
 
@@ -32,7 +38,8 @@ searchForm.addEventListener('submit', e => {
   const url = `${mainEndpoint}${query}&${language}&${sortBy}&${pageResults}&${apiKey}`;
   
   const getNewsData = async () => {
-    const response = await fetch(url);
+    loader('loading');
+    const response = await fetch(url, { signal });
     const data = response.json();
     return data;
   };
@@ -41,7 +48,6 @@ searchForm.addEventListener('submit', e => {
   .then(data => data.articles)
   .then((results)  => {
     let output = '<div class="row row-cols-1 row-cols-md-3 g-4">';
-
     // loop through posts
     results.forEach(article => {
       let image = article.urlToImage ? article.urlToImage : articleImage;
@@ -64,9 +70,12 @@ searchForm.addEventListener('submit', e => {
       `;
     });
     output += '</div>';
-    document.getElementById('results').innerHTML = output
+    document.getElementById('results').innerHTML = output;
+
   })
-  .catch(err => document.getElementById('results').textContent = err.message);
+  .catch((err)=> {
+    showMessage(err.message, 'alert-danger');
+  });
 
   e.preventDefault();
 });
@@ -85,4 +94,16 @@ function showMessage(message, className) {
 
   // remove message
   setTimeout(() => document.querySelector('.alert').remove(), 3000);
-}
+};
+
+// loader
+
+function loader(className) {
+  const div = document.createElement('div');
+  div.className = className;
+
+  const results = document.getElementById('results');
+  results.appendChild(div);
+
+  return div;
+};
