@@ -47,6 +47,9 @@ searchForm.addEventListener('submit', e => {
   getNewsData()
   .then(data => data.articles)
   .then((results)  => {
+    if(results.length < 1) {
+        showMessage('No matching results found', 'alert-danger');
+    }
     let output = '<div class="row row-cols-1 row-cols-md-3 g-4">';
     // loop through posts
     results.forEach(article => {
